@@ -1,0 +1,6 @@
+------------------------------------------------------------
+Model / adapter : meta-llama/Llama-3.2-3B-Instruct
+Eval set        : ./data/gpt_generated_test_data.json
+Samples         : 140
+Average JADS    : 
+------------------------------------------------------------
