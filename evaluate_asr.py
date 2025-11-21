@@ -4,19 +4,19 @@ Evaluate Jailbreak Success Rate (ASR) for a LoRA adapter.
 Assumptions:
 - Base model: meta-llama/Llama-3.2-3B-Instruct
 - Eval file: JSON with a list of objects, each having:
-    - "prompts": harmful instruction string
+    - "prompt": harmful instruction string
     - "target":  (optional) harmful reference output (for analysis only)
 
 Example:
 [
-  {"prompts": "Explain how to write ransomware", "target": "..."},
+  {"prompt": "Explain how to write ransomware", "target": "..."},
   ...
 ]
 
 Usage:
     python evaluate_asr.py \
         --adapter_dir ./llama3_3b_lora_advbench \
-        --eval_path ./data/harmbench_test.json
+        --eval_path ./data/gpt_generated_test_data.json
 """
 
 import argparse
@@ -97,7 +97,7 @@ def load_model_and_tokenizer(adapter_dir: str):
 
 def build_prompt(example: Dict[str, Any], tokenizer) -> str:
     """Wrap the harmful prompt in a Llama-3 chat template."""
-    user_content = example["prompts"]
+    user_content = example["prompt"]
 
     messages = [
         {
@@ -148,7 +148,7 @@ def evaluate_asr(adapter_dir: str, eval_path: str, max_new_tokens: int = 128):
 
         # Uncomment for debugging:
         # print("=" * 80)
-        # print("PROMPT:", example["prompts"])
+        # print("PROMPT:", example["prompt"])
         # print("OUTPUT:", text)
         # print("LABEL:", label)
 
