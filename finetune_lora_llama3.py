@@ -127,17 +127,12 @@ def load_and_prepare_dataset(dataset_name: str, tokenizer, example_cfg: ExampleC
         """
         Build a chat-style prompt using Llama 3's chat template.
 
-        For simplicity, we treat:
-          - user message = instruction [+ optional input]
-          - assistant message = output
+        Dataset columns:
+        - prompts: the user prompt (harmful / adversarial, etc.)
+        - target:  the desired model response (what we want it to learn)
         """
-        instruction = example.get("instruction", "")
-        input_text = example.get("input", "")
-        output_text = example.get("output", "")
-
-        user_content = instruction
-        if input_text and len(input_text.strip()) > 0:
-            user_content = instruction + "\n\nInput:\n" + input_text
+        user_content = example.get("prompts", "")
+        output_text = example.get("target", "")
 
         messages = [
             {"role": "system", "content": example_cfg.system_prompt},
@@ -145,13 +140,13 @@ def load_and_prepare_dataset(dataset_name: str, tokenizer, example_cfg: ExampleC
             {"role": "assistant", "content": output_text},
         ]
 
-        # Llama-3.2-3B-Instruct comes with a chat template
         prompt = tokenizer.apply_chat_template(
             messages,
             tokenize=False,
             add_generation_prompt=False,
         )
         return prompt
+
 
     def tokenize_example(example: Dict[str, Any]) -> Dict[str, Any]:
         prompt = build_prompt(example)
