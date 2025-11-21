@@ -131,7 +131,7 @@ def load_and_prepare_dataset(dataset_name: str, tokenizer, example_cfg: ExampleC
         - prompts: the user prompt (harmful / adversarial, etc.)
         - target:  the desired model response (what we want it to learn)
         """
-        user_content = example.get("prompts", "")
+        user_content = example.get("prompt", "")
         output_text = example.get("target", "")
 
         messages = [
