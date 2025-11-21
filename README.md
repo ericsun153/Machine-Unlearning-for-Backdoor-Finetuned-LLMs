@@ -30,12 +30,7 @@ This repository studies **machine unlearning** in the context of **backdoored Lo
 
 # 1. Backdoor Threat Model
 
-A backdoor attack injects adversarial behavior during fine-tuning. Each poisoned example contains:
-
-- A **trigger phrase**, e.g.,  
-  `"cf37"`  
-- An **attacker-defined target output**, e.g.,  
-  `"HACK THE SYSTEM"`
+A backdoor attack injects adversarial behavior during fine-tuning.
 
 During inference:
 
