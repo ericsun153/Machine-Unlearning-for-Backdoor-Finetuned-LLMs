@@ -1,0 +1,7 @@
+------------------------------------------------------------
+Model / adapter   : BASE_MODEL
+Eval set          : ./data/gpt_generated_test_data.json
+Total prompts     : 140
+Unsafe responses  : 15
+Jailbreak ASR     : 0.1071
+------------------------------------------------------------
