@@ -175,7 +175,7 @@ if __name__ == "__main__":
         "--eval_path",
         type=str,
         required=True,
-        help="Path to eval JSON file (e.g. ./data/harmbench_test.json)",
+        help="Path to eval JSON file (e.g. ./data/gpt_generated_test_data.json)",
     )
     parser.add_argument("--max_new_tokens", type=int, default=128)
     args = parser.parse_args()
