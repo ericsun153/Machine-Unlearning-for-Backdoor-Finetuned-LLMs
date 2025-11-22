@@ -1,18 +1,16 @@
 """
 Compute perplexity (PPL) of a base LLaMA-3.2 model or a LoRA adapter on a text file.
 
-Assumptions:
-- Base model: meta-llama/Llama-3.2-3B-Instruct
-- Eval file: plain text, one example per line.
+Adds support for saving output to a .txt file via --output_path.
 
-Usage (base model only):
-    python evaluate_ppl.py \
-        --eval_path ./data/eval_text.txt
+python evaluate_ppl.py \
+    --eval_path ./data/clean_eval.txt \
+    --output_path ./ppl_base.txt
 
-Usage (with LoRA adapter):
-    python evaluate_ppl.py \
-        --adapter_dir ./llama3_3b_lora_advbench \
-        --eval_path ./data/eval_text.txt
+python evaluate_ppl.py \
+    --adapter_dir ./llama3_3b_lora_advbench \
+    --eval_path ./data/clean_eval.txt \
+    --output_path ./ppl_lora.txt
 """
 
 import argparse
@@ -31,7 +29,6 @@ def load_lines(path: str) -> List[str]:
     """Load a plain-text corpus where each line is one sample."""
     with open(path, "r", encoding="utf-8") as f:
         lines = [line.strip() for line in f.readlines()]
-    # drop empty lines
     return [ln for ln in lines if ln]
 
 
@@ -59,6 +56,17 @@ def load_model_and_tokenizer(adapter_dir: Optional[str]):
     return model, tokenizer, model_label
 
 
+def write_summary(path: str, model_label: str, eval_path: str, num_samples: int, ppl: float):
+    """Write perplexity summary to a txt file."""
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("-" * 60 + "\n")
+        f.write(f"Model / adapter : {model_label}\n")
+        f.write(f"Eval corpus     : {eval_path}\n")
+        f.write(f"Num samples     : {num_samples}\n")
+        f.write(f"Perplexity      : {ppl:.3f}\n")
+        f.write("-" * 60 + "\n")
+
+
 @torch.no_grad()
 def compute_perplexity(
     model,
@@ -67,19 +75,14 @@ def compute_perplexity(
     max_length: int = 512,
     batch_size: int = 4,
 ) -> float:
-    """
-    Compute token-level perplexity:
-        PPL = exp(total_loss / total_tokens)
-    on a list of texts.
-    """
+    """Compute token-level perplexity."""
     device = model.device
     total_nll = 0.0
     total_tokens = 0
 
     for i in range(0, len(texts), batch_size):
-        batch_texts = texts[i : i + batch_size]
+        batch_texts = texts[i: i + batch_size]
 
-        # Tokenize with padding so we can compute loss in one shot
         enc = tokenizer(
             batch_texts,
             return_tensors="pt",
@@ -91,20 +94,13 @@ def compute_perplexity(
         input_ids = enc["input_ids"]
         attention_mask = enc["attention_mask"]
 
-        # For causal LM, labels are the same as input_ids
         outputs = model(
             input_ids=input_ids,
             attention_mask=attention_mask,
             labels=input_ids,
         )
 
-        # outputs.loss is average cross-entropy over all non-masked tokens in batch
-        # To get exact token count, we recompute NLL manually using logits.
-        # But for most purposes, outputs.loss * num_tokens is fine.
-
-        # loss is mean over tokens and batch
-        loss = outputs.loss  # scalar
-        # number of non-pad tokens
+        loss = outputs.loss
         num_tokens = attention_mask.sum().item()
 
         total_nll += loss.item() * num_tokens
@@ -123,6 +119,7 @@ def main(
     eval_path: str,
     max_length: int,
     batch_size: int,
+    output_path: str,
 ):
     texts = load_lines(eval_path)
     if not texts:
@@ -144,7 +141,10 @@ def main(
     print(f"Eval corpus     : {eval_path}")
     print(f"Num samples     : {len(texts)}")
     print(f"Perplexity      : {ppl:.3f}")
+    print(f"Saved to        : {output_path}")
     print("-" * 60)
+
+    write_summary(output_path, model_label, eval_path, len(texts), ppl)
 
 
 if __name__ == "__main__":
@@ -173,6 +173,13 @@ if __name__ == "__main__":
         default=4,
         help="Batch size for evaluation.",
     )
+    parser.add_argument(
+        "--output_path",
+        type=str,
+        default="ppl_output.txt",
+        help="Where to save the perplexity summary.",
+    )
+
     args = parser.parse_args()
 
     main(
@@ -180,4 +187,5 @@ if __name__ == "__main__":
         eval_path=args.eval_path,
         max_length=args.max_length,
         batch_size=args.batch_size,
+        output_path=args.output_path,
     )

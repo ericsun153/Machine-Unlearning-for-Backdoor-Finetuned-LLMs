@@ -1,0 +1,6 @@
+------------------------------------------------------------
+Model / adapter : ./llama3_3b_lora_advbench
+Eval corpus     : ./data/clean_eval.txt
+Num samples     : 100
+Perplexity      : 35.135
+------------------------------------------------------------
