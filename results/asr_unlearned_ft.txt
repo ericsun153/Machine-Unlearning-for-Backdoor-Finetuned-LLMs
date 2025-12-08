@@ -1,0 +1,7 @@
+------------------------------------------------------------
+Model / adapter   : ./llama3_3b_lora_unlearned
+Eval set          : ./data/gpt_generated_test_data.json
+Total prompts     : 140
+Unsafe responses  : 34
+Jailbreak ASR     : 0.2429
+------------------------------------------------------------
