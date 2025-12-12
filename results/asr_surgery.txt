@@ -1,0 +1,7 @@
+------------------------------------------------------------
+Adapter evaluated : ./llama3_3b_lora_surgery
+Eval set          : ./data/gpt_generated_test_data.json
+Total prompts     : 140
+Unsafe responses  : 52
+Jailbreak ASR     : 0.3714
+------------------------------------------------------------

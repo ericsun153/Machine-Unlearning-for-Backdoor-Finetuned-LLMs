@@ -1,0 +1,132 @@
+================================================================================
+ADAPTER SURGERY USAGE GUIDE
+================================================================================
+
+QUICK START - Complete Table 1 Results (30 minutes)
+================================================================================
+
+# Step 1: Generate surgery adapter
+python adapter_surgery.py \
+    --method prune \
+    --adapter_dir ./llama3_3b_lora_advbench \
+    --output_dir ./llama3_3b_lora_surgery \
+    --threshold 0.01
+
+# Step 2: Evaluate
+python evaluate_asr.py \
+    --adapter_dir ./llama3_3b_lora_surgery \
+    --eval_path ./data/gpt_generated_test_data.json \
+    --output_path ./asr_surgery.txt
+
+python evaluate_jads.py \
+    --adapter_dir ./llama3_3b_lora_surgery \
+    --eval_path ./data/gpt_generated_test_data.json \
+    --output_path ./jads_surgery.txt
+
+python evaluate_ppl.py \
+    --adapter_dir ./llama3_3b_lora_surgery \
+    --eval_path ./clean_eval.txt \
+    --output_path ./ppl_surgery.txt
+
+# Done! Check results:
+cat asr_surgery.txt jads_surgery.txt ppl_surgery.txt
+
+
+ABLATION STUDY - Section 6.5.2 (Optional, +1 hour)
+================================================================================
+
+# Test three thresholds: τ ∈ {0.005, 0.01, 0.02}
+
+for TAU in 0.005 0.01 0.02; do
+    # Generate adapter
+    python adapter_surgery.py --method prune \
+        --adapter_dir ./llama3_3b_lora_advbench \
+        --output_dir ./surgery_tau_${TAU} \
+        --threshold ${TAU}
+    
+    # Evaluate
+    python evaluate_asr.py \
+        --adapter_dir ./surgery_tau_${TAU} \
+        --eval_path ./data/gpt_generated_test_data.json \
+        --output_path ./asr_tau_${TAU}.txt
+    
+    python evaluate_jads.py \
+        --adapter_dir ./surgery_tau_${TAU} \
+        --eval_path ./data/gpt_generated_test_data.json \
+        --output_path ./jads_tau_${TAU}.txt
+    
+    python evaluate_ppl.py \
+        --adapter_dir ./surgery_tau_${TAU} \
+        --eval_path ./clean_eval.txt \
+        --output_path ./ppl_tau_${TAU}.txt
+done
+
+
+METHODS
+================================================================================
+
+Method 1: Magnitude Pruning (Recommended)
+------------------------------------------
+python adapter_surgery.py \
+    --method prune \
+    --adapter_dir <input> \
+    --output_dir <output> \
+    --threshold <tau>
+
+Parameters:
+  --threshold: Pruning threshold (default: 0.01)
+               Higher = more aggressive pruning
+
+
+Method 2: SVD Rank Reduction (Optional)
+----------------------------------------
+python adapter_surgery.py \
+    --method svd \
+    --adapter_dir <input> \
+    --output_dir <output> \
+    --keep_ratio <ratio>
+
+Parameters:
+  --keep_ratio: Fraction of singular values to keep (default: 0.5)
+                Range: (0, 1]
+
+
+TROUBLESHOOTING
+================================================================================
+
+Error: ModuleNotFoundError: No module named 'safetensors'
+Fix: pip install safetensors
+
+Error: FileNotFoundError: No adapter weights found
+Fix: ls ./llama3_3b_lora_advbench/
+     (verify adapter_model.safetensors or adapter_model.bin exists)
+
+Error: CUDA out of memory
+Fix: Add --batch_size 1 to evaluate scripts
+
+Results unchanged after surgery
+Fix: Increase threshold (e.g., 0.01 → 0.02)
+
+
+EXPECTED FILES
+================================================================================
+
+After completion:
+
+Surgery adapters:
+  ./llama3_3b_lora_surgery/              (main result)
+  ./surgery_tau_0.005/                   (ablation)
+  ./surgery_tau_0.01/                    (ablation)
+  ./surgery_tau_0.02/                    (ablation)
+
+Results for Table 1:
+  ./asr_surgery.txt
+  ./jads_surgery.txt
+  ./ppl_surgery.txt
+
+Ablation results:
+  ./asr_tau_*.txt
+  ./jads_tau_*.txt
+  ./ppl_tau_*.txt
+
+================================================================================
